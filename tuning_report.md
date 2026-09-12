@@ -10,7 +10,7 @@ El objetivo es detectar la mayor cantidad posible de clientes que cancelarán (`
 - Se eliminó `customerID`, se convirtió `TotalCharges` a numérico (los vacíos pasan a `NaN`) y se codificó `Churn` como 1/0.
 - Se hizo una división estratificada 80/20 antes de entrenar modelos (`random_state=42`). El test quedó aislado de ambas búsquedas.
 - El preprocesamiento está dentro de un `Pipeline`: imputación y escalado para variables numéricas; imputación y one-hot encoding para variables categóricas.
-- El clasificador fue `LogisticRegression` con sus hiperparámetros por defecto para la línea base.
+- La línea base usa `LogisticRegression()` literalmente con sus hiperparámetros por defecto. Para las búsquedas se usa una copia equivalente con `max_iter=2000` únicamente para evitar problemas de convergencia durante los folds; este parámetro no se ajusta.
 - Se utilizó `StratifiedKFold(n_splits=5, shuffle=True, random_state=42)`.
 
 ## Estrategia de búsqueda
@@ -38,13 +38,13 @@ Los mejores candidatos se revisan mediante `grid_results`, mostrando `mean_test_
 
 El modelo final es `grid_search.best_estimator_`, seleccionado por recall medio en validación cruzada y evaluado en el test una única vez al final. La precisión puede bajar al priorizar recall; ese es un trade-off aceptable para StreamLoop, siempre que se controle con precision y F1. No se utiliza el test para elegir hiperparámetros.
 
-## Checklist del instructor
+## Auditoría final del checklist del instructor
 
 - [x] Dataset cargado desde la URL indicada.
 - [x] Columnas no numéricas codificadas y valores faltantes manejados.
 - [x] División train/test antes del modelado.
 - [x] Preprocesamiento dentro de `Pipeline`.
-- [x] Línea base con hiperparámetros por defecto y test aislado.
+- [x] Línea base con `LogisticRegression()` y sus hiperparámetros por defecto; el test permanece aislado.
 - [x] `RandomizedSearchCV` antes de `GridSearchCV`.
 - [x] Espacio de parámetros compatible con el clasificador.
 - [x] Validación cruzada y búsquedas solo sobre train.
@@ -54,3 +54,12 @@ El modelo final es `grid_search.best_estimator_`, seleccionado por recall medio 
 - [x] Revisión de media y variación (`mean_test_score`, `std_test_score`) en `cv_results_`.
 - [x] Test usado exactamente dos veces: baseline y evaluación final.
 - [x] Comparación baseline vs. ajustado y justificación de estabilidad.
+
+### Auditoría del dataset
+
+- [x] El notebook usa `pd.read_csv(URL)` con la URL exacta solicitada por el instructor:
+	`https://raw.githubusercontent.com/IBM/telco-customer-churn-on-icp4d/master/data/Telco-Customer-Churn.csv`.
+- [x] No se usa el archivo local `Telco-Customer-Churn.csv` para el entrenamiento; cualquier copia local queda fuera de los entregables y no debe añadirse al commit.
+- [x] `customerID` se elimina porque es un identificador, `TotalCharges` se convierte a numérico y sus espacios vacíos se convierten en `NaN`.
+- [x] Los faltantes se imputan dentro del pipeline: mediana en numéricas y moda en categóricas.
+- [x] `Churn` se transforma explícitamente de `Yes`/`No` a `1`/`0`, y se eliminan únicamente filas cuyo objetivo no pudo mapearse.
